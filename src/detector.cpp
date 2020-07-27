@@ -7,6 +7,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
+#include <pcl/common/centroid.h>
 
 ros::Publisher pub;
 
@@ -50,6 +51,10 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	cloud_cluster->is_dense = true;
 
 	// Find the center of the cluster (X, Y, Z), radius (parallel to x, y plane)
+
+	Eigen::Vector4f centroid; 
+	pcl::compute3DCentroid (*cloud_cluster, centroid); 
+	ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
 
 	// Based on Z, decides if the cluster is an obstacle (point cloud is with respect to sensor. Need to transform to odom, for example)
   
