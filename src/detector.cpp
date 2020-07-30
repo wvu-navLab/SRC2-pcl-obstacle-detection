@@ -33,7 +33,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   // change frame of the point cloud
 
-  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/chassis", (*cloud_msg).header.frame_id, ros::Time(0));
+  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
   tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   // Convert from ROS to PCL data type
@@ -79,7 +79,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
       Eigen::Vector4f centroid;
       pcl::compute3DCentroid (*cloud_cluster, centroid);
-      ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
+      //ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
 
       //find highest centroid and the corresponding group index
       if (centroid[2] >= highest){
