@@ -10,26 +10,26 @@
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
+#include <tf2_ros/buffer.h>
+#include <tf2/transform_datatypes.h>
 #include <tf2_ros/transform_listener.h>
 #include <pcl_ros/transforms.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-//#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
-
+#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 
 ros::Publisher pub;
-tf2_ros::Buffer tfBuffer;
-tf2_ros::TransformListener tf2_Listener(tfBuffer);
-geometry_msgs::TransformStamped transformStamped;
+
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
   double highest = 0.0; // finding the cluster with the highest index
   int highest_index = 0;
 
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tf2_Listener(tfBuffer);
+  geometry_msgs::TransformStamped transformStamped;
   geometry_msgs::TransformStamped Tt2_v;
   sensor_msgs::PointCloud2 trns_cloud_msg;
-  
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
   // change frame of the point cloud
 
@@ -37,6 +37,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   // Convert from ROS to PCL data type
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg (trns_cloud_msg, *cloud);
 
   // This is necessary
@@ -65,26 +66,28 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // 	std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); // Check if the first cluster is the bigger, or if we need to order the vector. Maybe check all the clusters
 
         // each cluster represented by it
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-  	for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
-        	cloud_cluster->points.push_back(cloud->points[*pit]);
-  	}
-  	cloud_cluster->width = int (cloud_cluster->points.size ());
-  	cloud_cluster->height = 1;
-  	cloud_cluster->is_dense = true;
+      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
-	// Find the center of the cluster (X, Y, Z), radius (parallel to x, y plane)
+      for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
+          	cloud_cluster->points.push_back(cloud->points[*pit]);
+      }
+      cloud_cluster->width = int (cloud_cluster->points.size ());
+      cloud_cluster->height = 1;
+      cloud_cluster->is_dense = true;
 
-  	Eigen::Vector4f centroid;
-  	pcl::compute3DCentroid (*cloud_cluster, centroid);
-  	ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
+      // Find the center of the cluster (X, Y, Z), radius (parallel to x, y plane)
 
-    if (centroid[2] >= highest){
-      highest_index = j;
-      highest = centroid[2]; // the index of the corresponding cluster in cluster_indices
-    }
-    // increment index of cluster
-    j += 1;
+      Eigen::Vector4f centroid;
+      pcl::compute3DCentroid (*cloud_cluster, centroid);
+      ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
+
+      //find highest centroid and the corresponding group index
+      if (centroid[2] >= highest){
+        highest_index = j;
+        highest = centroid[2];
+      }
+      // increment index of cluster
+      j += 1;
 }
 
   pcl::PointIndices highest_cluster = cluster_indices[highest_index];
@@ -109,8 +112,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 }
 
-int
-main (int argc, char** argv)
+int main (int argc, char** argv)
 {
   // Initialize ROS
   ros::init (argc, argv, "my_pcl_tutorial");
