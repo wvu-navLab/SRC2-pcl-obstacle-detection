@@ -33,7 +33,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   // change frame of the point cloud
 
-  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", "scout_1_tf/camera_link", ros::Time(0));
+  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/chassis", (*cloud_msg).header.frame_id, ros::Time(0));
   tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   // Convert from ROS to PCL data type
