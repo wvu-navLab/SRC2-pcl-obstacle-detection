@@ -33,7 +33,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   // change frame of the point cloud
 
-  Tt2_v = tfBuffer.lookupTransform("turtle2", "turtle1", ros::Time(0));
+  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", "scout_1_tf/camera_link", ros::Time(0));
   tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   // Convert from ROS to PCL data type
@@ -89,6 +89,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       // increment index of cluster
       j += 1;
 }
+  ROS_INFO("Highest centroid :(%f)", highest);
 
   pcl::PointIndices highest_cluster = cluster_indices[highest_index];
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster1 (new pcl::PointCloud<pcl::PointXYZ>);
