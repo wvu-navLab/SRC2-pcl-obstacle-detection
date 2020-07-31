@@ -33,75 +33,74 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   // change frame of the point cloud
 
-  Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
-  tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
+  try{
+  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
+  	tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
-  // Convert from ROS to PCL data type
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromROSMsg (trns_cloud_msg, *cloud);
+  	// Convert from ROS to PCL data type
+  	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  	pcl::fromROSMsg (trns_cloud_msg, *cloud);
 
-  // This is necessary
-  std::vector<int> ind;
-  pcl::removeNaNFromPointCloud(*cloud, *cloud, ind);
-
-
-  // Perform the actual clustering
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
-  tree->setInputCloud(cloud);
-
-  std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setSearchMethod(tree);
-  ec.setInputCloud(cloud);
-  ec.setClusterTolerance (0.5);
-  ec.setMinClusterSize (200);
-  ec.extract (cluster_indices); // Does the work
-
-  ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
-
-  int j = 0;
-
-  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){ // iteract over all clusters, if necessary
-  // if (cluster_indices.size() > 0){
-  // 	std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); // Check if the first cluster is the bigger, or if we need to order the vector. Maybe check all the clusters
-
-        // each cluster represented by it
-      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-
-      for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
-          	cloud_cluster->points.push_back(cloud->points[*pit]);
-      }
-      cloud_cluster->width = int (cloud_cluster->points.size ());
-      cloud_cluster->height = 1;
-      cloud_cluster->is_dense = true;
-
-      // Find the center of the cluster (X, Y, Z), radius (parallel to x, y plane)
-
-      Eigen::Vector4f centroid;
-      pcl::compute3DCentroid (*cloud_cluster, centroid);
-      //ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
-
-      //find highest centroid and the corresponding group index
-      if (centroid[2] >= highest){
-        highest_index = j;
-        highest = centroid[2];
-      }
-      // increment index of cluster
-      j += 1;
-}
-  ROS_INFO("Highest centroid :(%f)", highest);
-
-  pcl::PointIndices highest_cluster = cluster_indices[highest_index];
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster1 (new pcl::PointCloud<pcl::PointXYZ>);
-  for (std::vector<int>::const_iterator pit = highest_cluster.indices.begin(); pit != highest_cluster.indices.end (); pit++){
-        cloud_cluster1->points.push_back(cloud->points[*pit]);
-  }
-  cloud_cluster1->width = int (cloud_cluster1->points.size ());
-  cloud_cluster1->height = 1;
-  cloud_cluster1->is_dense = true;
-	// Based on Z, decides if the cluster is an obstacle (point cloud is with respect to sensor. Need to transform to odom, for example)
+  	// This is necessary
+  	std::vector<int> ind;
+  	pcl::removeNaNFromPointCloud(*cloud, *cloud, ind);
 
 
+  	// Perform the actual clustering
+  	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+  	tree->setInputCloud(cloud);
+
+  	std::vector<pcl::PointIndices> cluster_indices;
+  	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+  	ec.setSearchMethod(tree);
+  	ec.setInputCloud(cloud);
+  	ec.setClusterTolerance (0.5);
+  	ec.setMinClusterSize (200);
+  	ec.extract (cluster_indices); // Does the work
+
+  	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
+
+  	int j = 0;
+
+  	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){ // iteract over all clusters, if necessary
+  	// if (cluster_indices.size() > 0){
+  	// 	std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); // Check if the first cluster is the bigger, or if we need to order the vector. Maybe check all the clusters
+
+        	// each cluster represented by it
+      		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+
+      		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
+          		cloud_cluster->points.push_back(cloud->points[*pit]);
+      		}
+      		cloud_cluster->width = int (cloud_cluster->points.size ());
+      		cloud_cluster->height = 1;
+      		cloud_cluster->is_dense = true;
+
+      		// Find the center of the cluster (X, Y, Z), radius (parallel to x, y plane)
+
+      		Eigen::Vector4f centroid;
+      		pcl::compute3DCentroid (*cloud_cluster, centroid);
+      		//ROS_INFO("centroid: (%f, %f, %f)", centroid[0], centroid[1], centroid[2]);
+
+      		//find highest centroid and the corresponding group index
+      		if (centroid[2] >= highest){
+        		highest_index = j;
+        		highest = centroid[2];
+      		}
+      		// increment index of cluster
+      		j += 1;
+	}
+  	ROS_INFO("Highest centroid :(%f)", highest);
+
+  	pcl::PointIndices highest_cluster = cluster_indices[highest_index];
+  	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster1 (new pcl::PointCloud<pcl::PointXYZ>);
+  	for (std::vector<int>::const_iterator pit = highest_cluster.indices.begin(); pit != highest_cluster.indices.end (); pit++){
+        	cloud_cluster1->points.push_back(cloud->points[*pit]);
+  	}
+  	cloud_cluster1->width = int (cloud_cluster1->points.size ());
+  	cloud_cluster1->height = 1;
+  	cloud_cluster1->is_dense = true;
+	
   	// Convert to ROS data type
 	sensor_msgs::PointCloud2 output;
 	pcl::toROSMsg(*cloud_cluster1, output);
@@ -110,7 +109,11 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	// Publish the data
 	pub.publish (output);
-
+  } // try
+  catch (tf2::TransformException &ex) {
+      ROS_WARN("%s",ex.what());
+      ros::Duration(1.0).sleep();
+    }
 }
 
 int main (int argc, char** argv)
