@@ -24,8 +24,8 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-double threshold{1.0};
-double deg_threshold{70.0};
+double threshold{2.0};  // set the height threshold
+double deg_threshold{60.0};  // set the angle threshold in deg from the vertical
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -65,7 +65,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   ec.setSearchMethod(tree);
   ec.setInputCloud(cloud);
   ec.setClusterTolerance (0.25);
-  ec.setMinClusterSize (200);
+  ec.setMinClusterSize (150);
   ec.extract (cluster_indices); // Does the work
 
   ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
@@ -95,8 +95,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
       //calculate nearest neighbours to the centroid to find the noraml to the plane
 
-      pcl::PointXYZ searchPoint(1,2,3);  // input point -- set this as centroid
-      float radius = 4; // radius of the neighbours
+      pcl::PointXYZ searchPoint(centroid[0],centroid[1],centroid[2]);  // input point -- set this as centroid
+      float radius = 6; // radius of the neighbours
       std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
       std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
 
@@ -105,11 +105,12 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
       if ( tree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
       {
-          for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
-              std::cout << "    "  <<   cloud->points[ pointIdxRadiusSearch[i] ].x
-                      << " " << cloud->points[ pointIdxRadiusSearch[i] ].y
-                      << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
-                      << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
+          std::cout << "Looking for nearest neighbours " << std::endl;
+          // for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
+          //     std::cout << "    "  <<   cloud->points[ pointIdxRadiusSearch[i] ].x
+          //             << " " << cloud->points[ pointIdxRadiusSearch[i] ].y
+          //             << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
+          //             << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
       }
 
       //compute the normal to the point
@@ -135,8 +136,11 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       // }
       // // increment index of cluster
       // j += 1;
-      if (centroid[2] > threshold && angle_deg < deg_threshold){
+      if (centroid[2] > threshold && angle_deg > deg_threshold){
         j = j+1;
+        std::cout << "Height of centroid -- " << centroid[2] << std::endl;
+        std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
+
         for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
             	combined_cluster->points.push_back(cloud->points[*pit]);
         }
