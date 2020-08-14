@@ -60,6 +60,7 @@
   <build_depend>libpcl-all-dev</build_depend>
   <build_export_depend>pcl_conversions</build_export_depend>
   <build_export_depend>pcl_ros</build_export_depend>
+
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <exec_depend>pcl_conversions</exec_depend>

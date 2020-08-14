@@ -14,6 +14,7 @@
 #include <tf2/transform_datatypes.h>
 #include <tf2_ros/transform_listener.h>
 #include <pcl_ros/transforms.h>
+#include <pcl/features/normal_3d.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 #include <Eigen/Dense>
@@ -99,6 +100,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
       std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
 
+      pcl::KdTreeFLANN<pcl::PointXYZ> tree;
+      tree.setInputCloud (cloud);
+
       if ( tree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
       {
           for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
@@ -109,7 +113,10 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       }
 
       //compute the normal to the point
-      computePointNormal (const pcl::PointCloud<PointInT> &cloud, const std::vector<int> &pointIdxRadiusSearch, Eigen::Vector4f &plane_parameters, float &curvature);
+      pcl::NormalEstimation<pcl::PointXYZ,pcl::Normal>  normEst;
+      Eigen::Vector4f plane_parameters;
+      float curvature;
+      normEst.computePointNormal(*cloud, pointIdxRadiusSearch, plane_parameters, curvature);
 
       //calculate angle of normal with respect to vertical :
       double angle_rad, angle_deg;

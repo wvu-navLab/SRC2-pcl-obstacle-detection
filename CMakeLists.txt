@@ -19,7 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(PCL 1.8 REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -123,6 +123,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -141,7 +142,7 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/pcl_obstacle_detection_node.cpp)
 
 add_executable(detector_node src/detector.cpp)
-target_link_libraries(detector_node ${catkin_LIBRARIES})
+target_link_libraries(detector_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
