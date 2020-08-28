@@ -25,7 +25,11 @@ using namespace Eigen;
 
 ros::Publisher pub;
 double threshold{0.5};  // set the height threshold
+<<<<<<< HEAD
 double deg_threshold{60.0};  // set the angle threshold in deg from the vertical
+=======
+double deg_threshold{50.0};  // set the angle threshold in deg from the vertical
+>>>>>>> b615516ada51a2448a1e47b424b75d9489c669f6
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -106,7 +110,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
       		if ( tree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
       		{
-          		std::cout << "Looking for nearest neighbours " << std::endl;
+          		// std::cout << "Looking for nearest neighbours " << std::endl;
           		// for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
           		//     std::cout << "    "  <<   cloud->points[ pointIdxRadiusSearch[i] ].x
           		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].y
