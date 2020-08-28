@@ -24,7 +24,7 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-double threshold{2.0};  // set the height threshold
+double threshold{0.5};  // set the height threshold
 double deg_threshold{60.0};  // set the angle threshold in deg from the vertical
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
@@ -65,8 +65,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
-  	ec.setClusterTolerance (0.25);
-  	ec.setMinClusterSize (150);
+  	ec.setClusterTolerance (0.15);
+  	ec.setMinClusterSize (100);
   	ec.extract (cluster_indices); // Does the work
 
   	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
