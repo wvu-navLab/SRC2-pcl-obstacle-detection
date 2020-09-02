@@ -24,8 +24,8 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-double threshold{0.5};  // set the height threshold
-double deg_threshold{50.0};  // set the angle threshold in deg from the vertical
+double threshold{.1};//.5  // set the height threshold
+double deg_threshold{10.0};  // set the angle threshold in deg from the vertical
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -180,10 +180,10 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("/scout_1/camera/points2", 1, cloud_cb);
+  ros::Subscriber sub = nh.subscribe ("/scout_1/inference/point_cloud", 1, cloud_cb);
 
   // Create a ROS publisher for the output point cloud
-  pub = nh.advertise<sensor_msgs::PointCloud2> ("output", 1);
+  pub = nh.advertise<sensor_msgs::PointCloud2> ("/scout_1/inference/point_cloud_filtered", 1);
 
   // Spin
   ros::spin ();
