@@ -24,14 +24,10 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-<<<<<<< HEAD
+
 double threshold{.1};//.5  // set the height threshold
 double deg_threshold{10.0};  // set the angle threshold in deg from the vertical
-=======
-double threshold{0.5};  // set the height threshold
-double num_thresh{50};
-// double deg_threshold{50.0};  // set the angle threshold in deg from the vertical
->>>>>>> 61691c7d8afb025ddc3e9788396017c066ff5265
+double num_thresh{100};
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
