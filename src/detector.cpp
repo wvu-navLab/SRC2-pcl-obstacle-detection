@@ -24,8 +24,8 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-double threshold{.1};//.5  // set the height threshold
-double deg_threshold{10.0};  // set the angle threshold in deg from the vertical
+double threshold{.5};//.5  // set the height threshold
+double deg_threshold{1.0};  // set the angle threshold in deg from the vertical
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -41,7 +41,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // change frame of the point cloud
 
   try{
-  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
+  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(.1));
   	tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   	// Convert from ROS to PCL data type
@@ -65,8 +65,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
-  	ec.setClusterTolerance (0.25);
-  	ec.setMinClusterSize (150);
+  	ec.setClusterTolerance (1.0);
+  	ec.setMinClusterSize (10);
   	ec.extract (cluster_indices); // Does the work
 
   	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
@@ -97,7 +97,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       		//calculate nearest neighbours to the centroid to find the noraml to the plane
 
       		pcl::PointXYZ searchPoint(centroid[0],centroid[1],centroid[2]);  // input point -- set this as centroid
-      		float radius = 6; // radius of the neighbours
+      		float radius =3; // radius of the neighbours
       		std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
       		std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
 
@@ -139,8 +139,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       		// j += 1;
       		if (centroid[2] > threshold && angle_deg > deg_threshold){
         		j = j+1;
-        		std::cout << "Height of centroid -- " << centroid[2] << std::endl;
-        		std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
+        	//	std::cout << "Height of centroid -- " << centroid[2] << std::endl;
+        	//	std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
 
         		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
             			combined_cluster->points.push_back(cloud->points[*pit]);
