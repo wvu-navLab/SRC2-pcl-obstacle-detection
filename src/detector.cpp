@@ -24,8 +24,8 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-double threshold{.5};//.5  // set the height threshold
-double deg_threshold{1.0};  // set the angle threshold in deg from the vertical
+double threshold{.1};//.5  // set the height threshold
+double deg_threshold{5};  // set the angle threshold in deg from the vertical
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
@@ -41,7 +41,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // change frame of the point cloud
 
   try{
-  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(.1));
+  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(.5));
   	tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   	// Convert from ROS to PCL data type
@@ -65,8 +65,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
-  	ec.setClusterTolerance (1.0);
-  	ec.setMinClusterSize (10);
+  	ec.setClusterTolerance (.1);
+  	ec.setMinClusterSize (50);
+    //ec.setMaxClusterSize (1000);
   	ec.extract (cluster_indices); // Does the work
 
   	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
@@ -97,7 +98,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       		//calculate nearest neighbours to the centroid to find the noraml to the plane
 
       		pcl::PointXYZ searchPoint(centroid[0],centroid[1],centroid[2]);  // input point -- set this as centroid
-      		float radius =3; // radius of the neighbours
+      		float radius =4; // radius of the neighbours
       		std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
       		std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
 
@@ -113,7 +114,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
           		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
           		//             << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
       		}
-
+          std::cout << "Cluster Size " << cloud_cluster->points.size () << std::endl;
       		//compute the normal to the point
       		pcl::NormalEstimation<pcl::PointXYZ,pcl::Normal>  normEst;
       		Eigen::Vector4f plane_parameters;
@@ -180,7 +181,7 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("/scout_1/inference/point_cloud", 1, cloud_cb);
+  ros::Subscriber sub = nh.subscribe ("/scout_1/inference/point_cloud", 4, cloud_cb);
 
   // Create a ROS publisher for the output point cloud
   pub = nh.advertise<sensor_msgs::PointCloud2> ("/scout_1/inference/point_cloud_filtered", 1);
