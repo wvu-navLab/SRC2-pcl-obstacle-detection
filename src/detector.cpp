@@ -24,31 +24,29 @@
 using namespace Eigen;
 
 ros::Publisher pub;
-
 double threshold{.1};//.5  // set the height threshold
 double deg_threshold{10.0};  // set the angle threshold in deg from the vertical
-double num_thresh{100};
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
   double highest = 0.0; // finding the cluster with the highest index
   int highest_index = 0;
 
-  // tf2_ros::Buffer tfBuffer;
-  // tf2_ros::TransformListener tf2_Listener(tfBuffer);
-  // geometry_msgs::TransformStamped transformStamped;
-  // geometry_msgs::TransformStamped Tt2_v;
-  // sensor_msgs::PointCloud2 trns_cloud_msg;
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tf2_Listener(tfBuffer);
+  geometry_msgs::TransformStamped transformStamped;
+  geometry_msgs::TransformStamped Tt2_v;
+  sensor_msgs::PointCloud2 trns_cloud_msg;
 
   // change frame of the point cloud
 
   try{
-  	// Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
-  	// tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
+  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(1.0));
+  	tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   	// Convert from ROS to PCL data type
   	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-  	pcl::fromROSMsg (*cloud_msg, *cloud);
+  	pcl::fromROSMsg (trns_cloud_msg, *cloud);
 
   	// This is necessary
   	std::vector<int> ind;
@@ -67,24 +65,21 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
-  	ec.setClusterTolerance (0.15);
-  	ec.setMinClusterSize (50);
+  	ec.setClusterTolerance (0.25);
+  	ec.setMinClusterSize (150);
   	ec.extract (cluster_indices); // Does the work
 
   	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
 
   	int j = 0;
-    int k =0;
-  	pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_combined_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+  	pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
   	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){ // iteract over all clusters, if necessary
   	// if (cluster_indices.size() > 0){
   		// 	std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); // Check if the first cluster is the bigger, or if we need to order the vector. Maybe check all the clusters
-        k=k+1;
+
       		// each cluster represented by it
       		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-
 
       		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
           		cloud_cluster->points.push_back(cloud->points[*pit]);
@@ -135,42 +130,25 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       		// Eigen::Vector5f param;
       		// param << plane_parameters, curvature;
       		// plane_params.push_back(param);
-      		// //find highest centroid and the corresponding group index
+      		//find highest centroid and the corresponding group index
       		// if (centroid[2] >= highest){
       		//   highest_index = j;
       		//   highest = centroid[2];
       		// }
       		// // increment index of cluster
-      		j += 1;
+      		// j += 1;
       		if (centroid[2] > threshold && angle_deg > deg_threshold){
         		j = j+1;
-        	//	std::cout << "Height of centroid -- " << centroid[2] << std::endl;
-        		//std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
+        		std::cout << "Height of centroid -- " << centroid[2] << std::endl;
+        		std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
 
         		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
-            			combined_cloud->points.push_back(cloud->points[*pit]);
+            			combined_cluster->points.push_back(cloud->points[*pit]);
         		}
       		}
   	} // for all clusters
-  	ROS_INFO("Number of clusters above threshold :(%d) of (%d) input", j, k);
+  	ROS_INFO("Number of clusters above threshold :(%d)", j);
 
-    //-------------------------------
-    // pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-    // sor.setInputCloud (combined_cloud);
-    // sor.setMeanK (50);
-    // sor.setStddevMulThresh (1.0);
-    // sor.filter (*filtered_combined_cloud);
-    //
-    // //---------------------------------
-    //
-    // pcl::PassThrough<pcl::PointXYZ> pass;
-    // pass.setInputCloud (combined_cloud);
-    // pass.setFilterFieldName ("z");
-    // pass.setFilterLimits (0.0, 1.0);
-    // //pass.setFilterLimitsNegative (true);
-    // pass.filter (*filtered_combined_cloud);
-
-    //-----------------------------------
   	// pcl::PointIndices highest_cluster = cluster_indices[highest_index];
   	// pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster1 (new pcl::PointCloud<pcl::PointXYZ>);
   	// for (std::vector<int>::const_iterator pit = highest_cluster.indices.begin(); pit != highest_cluster.indices.end (); pit++){
@@ -182,9 +160,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
   	// Convert to ROS data type
 	sensor_msgs::PointCloud2 output;
-	pcl::toROSMsg(*filtered_combined_cloud, output);
+	pcl::toROSMsg(*combined_cluster, output);
 
-	output.header= cloud_msg->header;
+	output.header= trns_cloud_msg.header;
 
 	// Publish the data
 	pub.publish (output);
@@ -202,7 +180,6 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
-
   ros::Subscriber sub = nh.subscribe ("/scout_1/inference/point_cloud", 1, cloud_cb);
 
   // Create a ROS publisher for the output point cloud
