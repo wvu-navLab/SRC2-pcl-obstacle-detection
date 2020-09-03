@@ -68,19 +68,20 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
   	ec.setClusterTolerance (0.15);
-  	ec.setMinClusterSize (100);
+  	ec.setMinClusterSize (50);
   	ec.extract (cluster_indices); // Does the work
 
   	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
 
   	int j = 0;
+    int k =0;
   	pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_combined_cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
   	for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){ // iteract over all clusters, if necessary
   	// if (cluster_indices.size() > 0){
   		// 	std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); // Check if the first cluster is the bigger, or if we need to order the vector. Maybe check all the clusters
-
+        k=k+1;
       		// each cluster represented by it
       		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
@@ -100,50 +101,50 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
       		//calculate nearest neighbours to the centroid to find the noraml to the plane
 
-      		// pcl::PointXYZ searchPoint(centroid[0],centroid[1],centroid[2]);  // input point -- set this as centroid
-      		// float radius = 6; // radius of the neighbours
-      		// std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
-      		// std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
-          //
-      		// pcl::KdTreeFLANN<pcl::PointXYZ> tree;
-      		// tree.setInputCloud (cloud);
-          //
-      		// if ( tree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
-      		// {
-          // 		// std::cout << "Looking for nearest neighbours " << std::endl;
-          // 		// for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
-          // 		//     std::cout << "    "  <<   cloud->points[ pointIdxRadiusSearch[i] ].x
-          // 		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].y
-          // 		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
-          // 		//             << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
-      		// }
-          //
-      		// //compute the normal to the point
-      		// pcl::NormalEstimation<pcl::PointXYZ,pcl::Normal>  normEst;
-      		// Eigen::Vector4f plane_parameters;
-      		// float curvature;
-      		// normEst.computePointNormal(*cloud, pointIdxRadiusSearch, plane_parameters, curvature);
-          //
-      		// //calculate angle of normal with respect to vertical :
-      		// double angle_rad, angle_deg;
-      		// double cos_angle;
-      		// cos_angle = plane_parameters[2]/std::pow(std::pow(plane_parameters[0],2) + std::pow(plane_parameters[1],2) + std::pow(plane_parameters[2],2), 0.5);
-      		// angle_rad = acos(cos_angle); // in radians
-      		// angle_deg = angle_rad*180/PI;
+      		pcl::PointXYZ searchPoint(centroid[0],centroid[1],centroid[2]);  // input point -- set this as centroid
+      		float radius = 6; // radius of the neighbours
+      		std::vector<int> pointIdxRadiusSearch; //to store index of surrounding points
+      		std::vector<float> pointRadiusSquaredDistance; // to store distance to surrounding points
+
+      		pcl::KdTreeFLANN<pcl::PointXYZ> tree;
+      		tree.setInputCloud (cloud);
+
+      		if ( tree.radiusSearch (searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0 )
+      		{
+          		// std::cout << "Looking for nearest neighbours " << std::endl;
+          		// for (size_t i = 0; i < pointIdxRadiusSearch.size (); ++i)
+          		//     std::cout << "    "  <<   cloud->points[ pointIdxRadiusSearch[i] ].x
+          		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].y
+          		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
+          		//             << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
+      		}
+
+      		//compute the normal to the point
+      		pcl::NormalEstimation<pcl::PointXYZ,pcl::Normal>  normEst;
+      		Eigen::Vector4f plane_parameters;
+      		float curvature;
+      		normEst.computePointNormal(*cloud, pointIdxRadiusSearch, plane_parameters, curvature);
+
+      		//calculate angle of normal with respect to vertical :
+      		double angle_rad, angle_deg;
+      		double cos_angle;
+      		cos_angle = plane_parameters[2]/std::pow(std::pow(plane_parameters[0],2) + std::pow(plane_parameters[1],2) + std::pow(plane_parameters[2],2), 0.5);
+      		angle_rad = acos(cos_angle); // in radians
+      		angle_deg = angle_rad*180/PI;
 
       		// Eigen::Vector5f param;
       		// param << plane_parameters, curvature;
       		// plane_params.push_back(param);
-      		//find highest centroid and the corresponding group index
+      		// //find highest centroid and the corresponding group index
       		// if (centroid[2] >= highest){
       		//   highest_index = j;
       		//   highest = centroid[2];
       		// }
       		// // increment index of cluster
-      		// j += 1;
-      		if (centroid[2] > threshold && cloud_cluster->width > num_thresh){ //&& angle_deg > deg_threshold){
+      		j += 1;
+      		if (centroid[2] > threshold && angle_deg > deg_threshold){
         		j = j+1;
-        		std::cout << "Height of centroid -- " << centroid[2] << std::endl;
+        	//	std::cout << "Height of centroid -- " << centroid[2] << std::endl;
         		//std::cout << "Inclination of normal --" << angle_deg << " deg " << std::endl;
 
         		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
@@ -151,7 +152,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
         		}
       		}
   	} // for all clusters
-  	ROS_INFO("Number of clusters above threshold :(%d)", j);
+  	ROS_INFO("Number of clusters above threshold :(%d) of (%d) input", j, k);
 
     //-------------------------------
     // pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
