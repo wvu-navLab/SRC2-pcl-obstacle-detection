@@ -114,7 +114,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
           		//             << " " << cloud->points[ pointIdxRadiusSearch[i] ].z
           		//             << " (squared distance: " << pointRadiusSquaredDistance[i] << ")" << std::endl;
       		}
-          std::cout << "Cluster Size " << cloud_cluster->points.size () << std::endl;
+      //    std::cout << "Cluster Size " << cloud_cluster->points.size () << std::endl;
       		//compute the normal to the point
       		pcl::NormalEstimation<pcl::PointXYZ,pcl::Normal>  normEst;
       		Eigen::Vector4f plane_parameters;
