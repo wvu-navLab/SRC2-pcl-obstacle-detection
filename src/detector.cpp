@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 // PCL specific includes
+#include <string>
 
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -23,6 +24,9 @@
 
 using namespace Eigen;
 
+std::string odometry_child_frame_id;
+
+
 ros::Publisher pub;
 double threshold{.1};//.5  // set the height threshold
 double deg_threshold{5};  // set the angle threshold in deg from the vertical
@@ -41,7 +45,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // change frame of the point cloud
 
   try{
-  	Tt2_v = tfBuffer.lookupTransform("scout_1_tf/base_footprint", (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(.5));
+  	Tt2_v = tfBuffer.lookupTransform(odometry_child_frame_id, (*cloud_msg).header.frame_id, ros::Time(0), ros::Duration(.5));
   	tf2::doTransform(*cloud_msg, trns_cloud_msg, Tt2_v);
 
   	// Convert from ROS to PCL data type
@@ -177,14 +181,22 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 int main (int argc, char** argv)
 {
   // Initialize ROS
-  ros::init (argc, argv, "my_pcl_tutorial");
+  ros::init (argc, argv, "detector_node");
   ros::NodeHandle nh;
 
+  std::string node_name = "detector_node";
+  if(ros::param::get(node_name+"/odometry_child_frame_id",odometry_child_frame_id)==false)
+  {
+    ROS_FATAL("No parameter 'odometry_child_frame_id' specified");
+    ros::shutdown();
+    exit(1);
+  }
+
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("/scout_1/inference/point_cloud", 4, cloud_cb);
+  ros::Subscriber sub = nh.subscribe ("inference/point_cloud", 4, cloud_cb);
 
   // Create a ROS publisher for the output point cloud
-  pub = nh.advertise<sensor_msgs::PointCloud2> ("/scout_1/inference/point_cloud_filtered", 1);
+  pub = nh.advertise<sensor_msgs::PointCloud2> ("inference/point_cloud_filtered", 1);
 
   // Spin
   ros::spin ();
