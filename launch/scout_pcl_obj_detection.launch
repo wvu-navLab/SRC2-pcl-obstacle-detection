@@ -1,0 +1,11 @@
+<launch>
+  <group ns="scout_1">
+    <node pkg="pcl_obstacle_detection" type="detector_node" respawn="false" name="detector_node" output="screen">
+      <rosparam
+        command="load"
+        file="$(find pcl_object_detection)/config/scout_laser_tools.yaml"
+        subst_value="true"
+      />
+    </node>
+  </group>
+</launch>
