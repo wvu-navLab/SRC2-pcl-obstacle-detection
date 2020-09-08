@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   tf2_ros
   tf2_sensor_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,12 +59,11 @@ find_package(PCL 1.8 REQUIRED)
 #   Message2.msg
 # )
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+# Generate services in the 'srv' folder
+ add_service_files(
+   FILES
+   HomingFilter.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -73,10 +73,10 @@ find_package(PCL 1.8 REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   sensor_msgs
-# )
+generate_messages(
+   DEPENDENCIES
+   sensor_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +110,7 @@ find_package(PCL 1.8 REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES pcl_obstacle_detection
-#  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp sensor_msgs
+  CATKIN_DEPENDS message_generation roscpp sensor_msgs
 #  DEPENDS system_lib
 )
 
@@ -143,6 +143,10 @@ include_directories(
 
 add_executable(detector_node src/detector.cpp)
 target_link_libraries(detector_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(homing_filter_node src/landmarkFilter.cpp)
+target_link_libraries(homing_filter_node ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(homing_filter_node pcl_obstacle_detection_generate_messages_cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
