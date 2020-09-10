@@ -84,6 +84,12 @@ bool serviceCallback(pcl_obstacle_detection::HomingFilter::Request &req, pcl_obs
 
 	// Publish the data
 	res.cloud = output;
+  if((int)cluster_indices.size()==0){
+    res.success = false;
+  }
+  else{
+    res.success = true;
+  }
   return true;
 }
 
