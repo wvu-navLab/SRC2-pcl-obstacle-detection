@@ -74,7 +74,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     //ec.setMaxClusterSize (1000);
   	ec.extract (cluster_indices); // Does the work
 
-  	ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
+  	//ROS_INFO("Number of clusters: %d", (int)cluster_indices.size());
 
   	int j = 0;
   	pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cluster (new pcl::PointCloud<pcl::PointXYZ>);
@@ -152,7 +152,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
         		}
       		}
   	} // for all clusters
-  	ROS_INFO("Number of clusters above threshold :(%d)", j);
+  	//ROS_INFO("Number of clusters above threshold :(%d)", j);
 
   	// pcl::PointIndices highest_cluster = cluster_indices[highest_index];
   	// pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster1 (new pcl::PointCloud<pcl::PointXYZ>);
