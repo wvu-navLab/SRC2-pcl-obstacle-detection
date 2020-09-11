@@ -50,7 +50,7 @@ bool serviceCallback(pcl_obstacle_detection::HomingFilter::Request &req, pcl_obs
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
   	ec.setClusterTolerance (.1);
-  	ec.setMinClusterSize (200);
+  	ec.setMinClusterSize (50);
     //ec.setMaxClusterSize (1000);
   	ec.extract (cluster_indices); // Does the work
 
