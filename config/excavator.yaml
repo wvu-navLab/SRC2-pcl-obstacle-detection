@@ -1,18 +1,3 @@
-loop_rate : 10.0
-wheel_diameter : 0.55
-wheel_base: 1.5748 #TODO:check this
-steering_track: 1.82 #TODO:check this
-wheel_steering_y_offset: 0.022225
-initPosx: 0.0
-initPosy: 0.0
-initPosz: 0.0
-initRoll: 0.0
-initPitch: 0.0
-initYaw: 0.0
-imu_topic_name : "/excavator_1/imu"
-odometry_out_topic_name : "/excavator_1/dead_reckoning/odometry"
-# kimera_odometry_out_topic_name : "/excavator_1/dead_reckoning/true_pose"
-joint_state_topic_name : "/excavator_1/joint_states"
 odometry_frame_id : "excavator_1_tf/odom"
 odometry_child_frame_id : "excavator_1_tf/base_footprint"
-joint_state_frame_id : "excavator_1_tf/chassis"
+robot_name : "excavator"
