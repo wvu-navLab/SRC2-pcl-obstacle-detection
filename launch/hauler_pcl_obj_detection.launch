@@ -1,5 +1,5 @@
 <launch>
-  <group ns="hauler_1">
+  <group ns="small_hauler_1">
     <node pkg="pcl_obstacle_detection" type="detector_node" respawn="false" name="detector_node" output="screen">
       <rosparam
         command="load"
