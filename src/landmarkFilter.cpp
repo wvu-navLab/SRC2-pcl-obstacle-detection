@@ -49,8 +49,8 @@ bool serviceCallback(pcl_obstacle_detection::HomingFilter::Request &req, pcl_obs
   	pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
   	ec.setSearchMethod(tree);
   	ec.setInputCloud(cloud);
-  	ec.setClusterTolerance (.1);
-  	ec.setMinClusterSize (50);
+  	ec.setClusterTolerance (1);
+  	ec.setMinClusterSize (10);
     //ec.setMaxClusterSize (1000);
   	ec.extract (cluster_indices); // Does the work
 
@@ -75,7 +75,7 @@ bool serviceCallback(pcl_obstacle_detection::HomingFilter::Request &req, pcl_obs
         		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); pit++){
             			combined_cluster->points.push_back(cloud->points[*pit]);
         		}
-
+            break;  // This break was added to make sure we are only using the biggest cluster
   	} // for all clusters
 	sensor_msgs::PointCloud2 output;
 	pcl::toROSMsg(*combined_cluster, output);
