@@ -100,6 +100,15 @@ int main (int argc, char** argv)
   ros::NodeHandle nh;
 
   std::string node_name = "homing_filter_node";
+  std::string robot_name;
+
+  if(ros::param::get("robot_name",robot_name)==false)
+  {
+    ROS_FATAL("No parameter 'robot_name' specified");
+    ros::shutdown();
+    exit(1);
+  }
+
   if(ros::param::get(node_name+"/odometry_child_frame_id",odometry_child_frame_id)==false)
   {
     ROS_FATAL("No parameter 'odometry_child_frame_id' specified");
@@ -107,6 +116,7 @@ int main (int argc, char** argv)
     exit(1);
   }
 
+  odometry_child_frame_id = robot_name + odometry_child_frame_id;
 
   // Create a ROS service for the input point cloud
   ros::ServiceServer service = nh.advertiseService("homing_filter", serviceCallback);
