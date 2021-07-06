@@ -204,7 +204,17 @@ add_dependencies(homing_filter_node pcl_obstacle_detection_generate_messages_cpp
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
+install(TARGETS detector_node homing_filter_node
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
+install(DIRECTORY launch/
+   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+   PATTERN ".svn" EXCLUDE)
 
+
+   install(DIRECTORY config/
+       DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+       PATTERN ".svn" EXCLUDE)
 #############
 ## Testing ##
 #############
